@@ -12,7 +12,9 @@
 -record(monitor, {names, stations}).
 
 %% API
--export([createMonitor/0, addStation/3, addValue/5, removeValue/4, getOneValue/4, getStationMean/3, getDailyMean/3]).
+-export([createMonitor/0, addStation/3, addValue/5,
+  removeValue/4, getOneValue/4, getStationMean/3,
+  getDailyMean/3, getCorrelation/3]).
 
 createMonitor() -> #monitor{names = #{}, stations = #{}}.
 
@@ -90,3 +92,17 @@ getDailyMean(D, T, M) when is_record(M, monitor) ->
   {Sum, Length} = lists:foldl(fun(V, {S, L}) ->
     {S + V, L + 1} end, {0, 0}, FlattenedValues),
   Sum / Length.
+
+getCorrelation(T1, T2, M) when is_record(M, monitor) and is_list(T1) and is_list(T2) ->
+  Set = maps:from_list(lists:flatmap(fun(Vals) ->
+     maps:to_list(
+       maps:filter(fun({D, T}, _) ->
+        ((T =:= T1) and (maps:get({D, T2}, Vals, dunno) =/= dunno))
+          or ((T =:= T2) and (maps:get({D, T1}, Vals, dunno) =/= dunno))
+                   end, Vals))
+                      end, maps:values(M#monitor.stations))),
+  Keys = lists:map(fun({{D, _}, _}) -> D end, maps:to_list(Set)),
+  Tuples = lists:map(fun(D) -> {maps:get({D, T1}, Set), maps:get({D, T2}, Set)} end, Keys),
+  SquaresSum = lists:foldl(fun({V1, V2}, Acc) -> (V1 - V2)*(V1 - V2) + Acc end, 0, Tuples),
+  Res = math:sqrt(SquaresSum / lists:flatlength(Tuples)),
+  Res.
