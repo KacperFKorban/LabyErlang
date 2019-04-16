@@ -49,20 +49,19 @@ getSafe(K, M) ->
 getReading(Readings, D, T, M) when is_record(M, monitor) ->
   ReadingValue = maps:get({D, T}, Readings, dunno),
   if
-    ReadingValue =:= dunno -> error("No such Reading!");
+    ReadingValue =:= dunno -> ok;
     true -> ReadingValue
   end.
 
 addValue(K, D, T, V, M) when is_record(M, monitor) and is_list(T) and (is_float(V) or is_integer(V)) ->
   Key = checkKey(K, M),
+  {{_, _, _}, {_, _, _}} = D,
   Readings = getReadings(Key, M),
   ReadingValue = maps:get({D, T}, Readings, dunno),
   if
-    ReadingValue =/= dunno -> error("Wrong Key!");
-    true -> ok
-  end,
-  {{_, _, _}, {_, _, _}} = D,
-  M#monitor{stations = (M#monitor.stations)#{Key => Readings#{{D, T} => V}}}.
+    ReadingValue =/= dunno -> ok;
+    true -> M#monitor{stations = (M#monitor.stations)#{Key => Readings#{{D, T} => V}}}
+  end.
 
 removeValue(K, D, T, M) when is_record(M, monitor) ->
   Key = checkKey(K, M),

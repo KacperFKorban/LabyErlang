@@ -12,10 +12,12 @@
 %% API
 -export([start/0, stop/0, addStation/2, addValue/4,
   removeValue/3, getOneValue/3, getStationMean/2,
-  getDailyMean/2, getCorrelation/2]).
+  getDailyMean/2, getCorrelation/2, crash/0]).
 
 start() ->
-  register(monitor, spawn(fun() -> init() end)).
+  Pid = spawn(fun() -> init() end),
+  register(monitor, Pid),
+  Pid.
 
 stop() ->
   monitor ! stop.
@@ -48,6 +50,9 @@ loop(M) ->
       loop(M);
     {request, Pid, {getCorrelation, T1, T2}} ->
       Pid ! {reply, pollution:getCorrelation(T1, T2, M)},
+      loop(M);
+    crash ->
+      1/0,
       loop(M);
     stop ->
       terminate()
@@ -82,3 +87,6 @@ getCorrelation(T1, T2) ->
 
 terminate() ->
   ok.
+
+crash() ->
+  monitor ! crash.
