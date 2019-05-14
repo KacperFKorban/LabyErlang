@@ -14,7 +14,7 @@
 -export([start/0, stop/0, init/1, handle_call/3, handle_cast/2]).
 -export([addStation/2, addValue/4, removeValue/3, getOneValue/3,
   getStationMean/2, getDailyMean/2, getCorrelation/2, crash/0,
-  handle_info/2, start_link/0]).
+  handle_info/2, start_link/0, terminate/2]).
 
 start_link() ->
   gen_server:start_link(
